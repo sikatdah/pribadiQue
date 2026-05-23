@@ -193,37 +193,37 @@ PERFORMANCE OF THIS SOFTWARE.
           </div>
         </div>
       </div>
-    `,c()},o=()=>{const f=e.querySelector("#sr-content");f&&(f.innerHTML=l(),f.classList.remove("sr-fade-in"),f.offsetWidth,f.classList.add("sr-fade-in")),g()},l=()=>{if(t.items.length===0)return`
+    `,c()},o=()=>{const f=e.querySelector("#sr-content");f&&(f.innerHTML=l(),f.classList.remove("sr-fade-in"),f.offsetWidth,f.classList.add("sr-fade-in")),g()},l=()=>{const f=t.items.length===0?`
         <div class="sr-empty">
           <div class="sr-empty-icon">${a.box}</div>
           <h3>Belum ada barang</h3>
           <p>Ketuk tombol <strong>+</strong> untuk menambahkan barang baru.</p>
         </div>
-      `;const f=t.items.map(H=>{const p=n(H),x=parseInt(H.stok)===0,X=x&&parseInt(H.dibuka)<2;let G="";return X?G='<span class="badge badge-kritis">Kritis</span>':x&&(G='<span class="badge badge-habis">Habis</span>'),`
-        <div class="sr-laporan-card ${x?"is-kritis":""} sr-laporan-card-clickable" data-id="${H.id}" role="button" tabindex="0" aria-label="Edit ${H.nama}">
-          <div class="sr-laporan-name">
-            <span class="sr-laporan-nama">${H.nama}</span>
-            ${G}
-          </div>
-          <div class="sr-laporan-stats">
-            <div class="sr-stat">
-              <span class="sr-stat-val ${x?"text-red":""}">${H.stok}</span>
-              <span class="sr-stat-lbl">Stok</span>
-            </div>
-            <div class="sr-stat-divider"></div>
-            <div class="sr-stat">
-              <span class="sr-stat-val">${H.dibuka}</span>
-              <span class="sr-stat-lbl">Dibuka</span>
-            </div>
-            <div class="sr-stat-divider"></div>
-            <div class="sr-stat">
-              <span class="sr-stat-val">${p}</span>
-              <span class="sr-stat-lbl">Per Bulan</span>
-            </div>
-            <button class="sr-delete-btn btn-delete-item" data-id="${H.id}" title="Hapus">${a.trash}</button>
-          </div>
-        </div>
-      `}).join("");return`
+      `:`<div class="sr-laporan-list">${t.items.map(H=>{const p=n(H),x=parseInt(H.stok)===0,X=x&&parseInt(H.dibuka)<2;let G="";return X?G='<span class="badge badge-kritis">Kritis</span>':x&&(G='<span class="badge badge-habis">Habis</span>'),`
+              <div class="sr-laporan-card ${x?"is-kritis":""} sr-laporan-card-clickable" data-id="${H.id}" role="button" tabindex="0" aria-label="Edit ${H.nama}">
+                <div class="sr-laporan-name">
+                  <span class="sr-laporan-nama">${H.nama}</span>
+                  ${G}
+                </div>
+                <div class="sr-laporan-stats">
+                  <div class="sr-stat">
+                    <span class="sr-stat-val ${x?"text-red":""}">${H.stok}</span>
+                    <span class="sr-stat-lbl">Stok</span>
+                  </div>
+                  <div class="sr-stat-divider"></div>
+                  <div class="sr-stat">
+                    <span class="sr-stat-val">${H.dibuka}</span>
+                    <span class="sr-stat-lbl">Dibuka</span>
+                  </div>
+                  <div class="sr-stat-divider"></div>
+                  <div class="sr-stat">
+                    <span class="sr-stat-val">${p}</span>
+                    <span class="sr-stat-lbl">Per Bulan</span>
+                  </div>
+                  <button class="sr-delete-btn btn-delete-item" data-id="${H.id}" title="Hapus">${a.trash}</button>
+                </div>
+              </div>
+            `}).join("")}</div>`;return`
       <div class="sr-laporan-header">
         <div class="sr-section-title">
           <span>Inventaris</span>
@@ -231,7 +231,8 @@ PERFORMANCE OF THIS SOFTWARE.
         </div>
         <button id="btn-add-item" class="sr-fab-inline" title="Tambah barang">${a.plus}</button>
       </div>
-      <div class="sr-laporan-list">${f}</div>
+      
+      ${f}
 
       <!-- Add New Item Form (hidden by default) -->
       <div id="add-item-form" class="sr-card" style="display:none; margin-top:12px;">
