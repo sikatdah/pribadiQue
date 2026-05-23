@@ -112,51 +112,51 @@ export function StokRumahModule(container, navigate) {
 
   // ─── Render: Laporan ──────────────────────────────────────────────────────
   const renderLaporan = () => {
-    if (state.items.length === 0) {
-      return `
+    const listContent = state.items.length === 0
+      ? `
         <div class="sr-empty">
           <div class="sr-empty-icon">${icons.box}</div>
           <h3>Belum ada barang</h3>
           <p>Ketuk tombol <strong>+</strong> untuk menambahkan barang baru.</p>
         </div>
-      `;
-    }
+      `
+      : `<div class="sr-laporan-list">${
+          state.items.map(item => {
+            const perBulan = calcPerBulan(item);
+            const isStok0 = parseInt(item.stok) === 0;
+            const isKritis = isStok0 && parseInt(item.dibuka) < 2;
 
-    const rows = state.items.map(item => {
-      const perBulan = calcPerBulan(item);
-      const isStok0 = parseInt(item.stok) === 0;
-      const isKritis = isStok0 && parseInt(item.dibuka) < 2;
+            let badge = '';
+            if (isKritis) badge = `<span class="badge badge-kritis">Kritis</span>`;
+            else if (isStok0) badge = `<span class="badge badge-habis">Habis</span>`;
 
-      let badge = '';
-      if (isKritis) badge = `<span class="badge badge-kritis">Kritis</span>`;
-      else if (isStok0) badge = `<span class="badge badge-habis">Habis</span>`;
-
-      return `
-        <div class="sr-laporan-card ${isStok0 ? 'is-kritis' : ''} sr-laporan-card-clickable" data-id="${item.id}" role="button" tabindex="0" aria-label="Edit ${item.nama}">
-          <div class="sr-laporan-name">
-            <span class="sr-laporan-nama">${item.nama}</span>
-            ${badge}
-          </div>
-          <div class="sr-laporan-stats">
-            <div class="sr-stat">
-              <span class="sr-stat-val ${isStok0 ? 'text-red' : ''}">${item.stok}</span>
-              <span class="sr-stat-lbl">Stok</span>
-            </div>
-            <div class="sr-stat-divider"></div>
-            <div class="sr-stat">
-              <span class="sr-stat-val">${item.dibuka}</span>
-              <span class="sr-stat-lbl">Dibuka</span>
-            </div>
-            <div class="sr-stat-divider"></div>
-            <div class="sr-stat">
-              <span class="sr-stat-val">${perBulan}</span>
-              <span class="sr-stat-lbl">Per Bulan</span>
-            </div>
-            <button class="sr-delete-btn btn-delete-item" data-id="${item.id}" title="Hapus">${icons.trash}</button>
-          </div>
-        </div>
-      `;
-    }).join('');
+            return `
+              <div class="sr-laporan-card ${isStok0 ? 'is-kritis' : ''} sr-laporan-card-clickable" data-id="${item.id}" role="button" tabindex="0" aria-label="Edit ${item.nama}">
+                <div class="sr-laporan-name">
+                  <span class="sr-laporan-nama">${item.nama}</span>
+                  ${badge}
+                </div>
+                <div class="sr-laporan-stats">
+                  <div class="sr-stat">
+                    <span class="sr-stat-val ${isStok0 ? 'text-red' : ''}">${item.stok}</span>
+                    <span class="sr-stat-lbl">Stok</span>
+                  </div>
+                  <div class="sr-stat-divider"></div>
+                  <div class="sr-stat">
+                    <span class="sr-stat-val">${item.dibuka}</span>
+                    <span class="sr-stat-lbl">Dibuka</span>
+                  </div>
+                  <div class="sr-stat-divider"></div>
+                  <div class="sr-stat">
+                    <span class="sr-stat-val">${perBulan}</span>
+                    <span class="sr-stat-lbl">Per Bulan</span>
+                  </div>
+                  <button class="sr-delete-btn btn-delete-item" data-id="${item.id}" title="Hapus">${icons.trash}</button>
+                </div>
+              </div>
+            `;
+          }).join('')
+        }</div>`;
 
     return `
       <div class="sr-laporan-header">
@@ -166,7 +166,8 @@ export function StokRumahModule(container, navigate) {
         </div>
         <button id="btn-add-item" class="sr-fab-inline" title="Tambah barang">${icons.plus}</button>
       </div>
-      <div class="sr-laporan-list">${rows}</div>
+      
+      ${listContent}
 
       <!-- Add New Item Form (hidden by default) -->
       <div id="add-item-form" class="sr-card" style="display:none; margin-top:12px;">
