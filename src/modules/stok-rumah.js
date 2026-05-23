@@ -3,7 +3,6 @@ import { store } from '../store.js';
 export function StokRumahModule(container, navigate) {
   // ─── State ───────────────────────────────────────────────────────────────
   let state = store.get('stok-rumah', { items: [] });
-  let activeTab = 'laporan'; // 'laporan' | 'belanja' | 'konsumsi'
 
   // Migrate old items that lack id / logs
   state.items = state.items.map((item, i) => ({
@@ -36,12 +35,11 @@ export function StokRumahModule(container, navigate) {
   // ─── SVG Icons ────────────────────────────────────────────────────────────
   const icons = {
     laporan: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
-    belanja: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
-    konsumsi: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>`,
     search: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
     box: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`,
     plus: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`,
     trash: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
+    close: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
   };
 
   // ─── Render: Shell ────────────────────────────────────────────────────────
@@ -61,48 +59,54 @@ export function StokRumahModule(container, navigate) {
 
         <!-- Tab Content -->
         <div id="sr-content" class="sr-content">
-          ${renderActiveTab()}
+          ${renderLaporan()}
         </div>
 
-        <!-- Bottom Tab Bar -->
-        <nav class="sr-bottom-nav" id="sr-bottom-nav">
-          <button class="sr-tab-btn ${activeTab === 'laporan' ? 'active' : ''}" data-tab="laporan">
-            <span class="sr-tab-icon">${icons.laporan}</span>
-            <span class="sr-tab-label">Laporan</span>
-          </button>
-          <button class="sr-tab-btn ${activeTab === 'belanja' ? 'active' : ''}" data-tab="belanja">
-            <span class="sr-tab-icon">${icons.belanja}</span>
-            <span class="sr-tab-label">Belanja</span>
-          </button>
-          <button class="sr-tab-btn ${activeTab === 'konsumsi' ? 'active' : ''}" data-tab="konsumsi">
-            <span class="sr-tab-icon">${icons.konsumsi}</span>
-            <span class="sr-tab-label">Konsumsi</span>
-          </button>
-        </nav>
+        <!-- Modal overlay -->
+        <div id="sr-modal-overlay" class="sr-modal-overlay" style="display:none;" aria-modal="true" role="dialog">
+          <div class="sr-modal" id="sr-modal">
+            <div class="sr-modal-header">
+              <span class="sr-modal-title" id="sr-modal-item-name"></span>
+              <button id="sr-modal-close" class="sr-modal-close-btn" aria-label="Tutup">${icons.close}</button>
+            </div>
+
+            <!-- Toggle: Belanja / Konsumsi -->
+            <div class="sr-toggle-group">
+              <button class="sr-toggle-btn active" id="toggle-belanja" data-mode="belanja">Belanja</button>
+              <button class="sr-toggle-btn" id="toggle-konsumsi" data-mode="konsumsi">Konsumsi</button>
+            </div>
+
+            <!-- Mode hint -->
+            <p class="sr-modal-hint" id="sr-modal-hint">Tambah stok berdasarkan jumlah yang dibeli.</p>
+
+            <!-- Fields -->
+            <div class="sr-form-row">
+              <div class="sr-form-group flex-1">
+                <label for="modal-stok">Stok</label>
+                <input type="number" id="modal-stok" class="sr-input" min="0" placeholder="0">
+              </div>
+              <div class="sr-form-group flex-1">
+                <label for="modal-dibuka">Dibuka</label>
+                <input type="number" id="modal-dibuka" class="sr-input" min="0" placeholder="0">
+              </div>
+            </div>
+
+            <button id="sr-modal-submit" class="sr-btn sr-btn-primary sr-btn-full">Submit</button>
+          </div>
+        </div>
       </div>
     `;
     attachEvents();
   };
 
-  const renderActiveTab = () => {
-    if (activeTab === 'laporan') return renderLaporan();
-    if (activeTab === 'belanja') return renderBelanja();
-    if (activeTab === 'konsumsi') return renderKonsumsi();
-    return '';
-  };
-
   const refreshContent = () => {
     const contentEl = container.querySelector('#sr-content');
     if (contentEl) {
-      contentEl.innerHTML = renderActiveTab();
+      contentEl.innerHTML = renderLaporan();
       contentEl.classList.remove('sr-fade-in');
       void contentEl.offsetWidth; // reflow
       contentEl.classList.add('sr-fade-in');
     }
-    // Update tab active states
-    container.querySelectorAll('.sr-tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === activeTab);
-    });
     attachContentEvents();
   };
 
@@ -113,7 +117,7 @@ export function StokRumahModule(container, navigate) {
         <div class="sr-empty">
           <div class="sr-empty-icon">${icons.box}</div>
           <h3>Belum ada barang</h3>
-          <p>Tambahkan barang via tab <strong>Belanja</strong>.</p>
+          <p>Ketuk tombol <strong>+</strong> untuk menambahkan barang baru.</p>
         </div>
       `;
     }
@@ -128,7 +132,7 @@ export function StokRumahModule(container, navigate) {
       else if (isStok0) badge = `<span class="badge badge-habis">Habis</span>`;
 
       return `
-        <div class="sr-laporan-card ${isStok0 ? 'is-kritis' : ''}">
+        <div class="sr-laporan-card ${isStok0 ? 'is-kritis' : ''} sr-laporan-card-clickable" data-id="${item.id}" role="button" tabindex="0" aria-label="Edit ${item.nama}">
           <div class="sr-laporan-name">
             <span class="sr-laporan-nama">${item.nama}</span>
             ${badge}
@@ -155,89 +159,49 @@ export function StokRumahModule(container, navigate) {
     }).join('');
 
     return `
-      <div class="sr-section-title">
-        <span>Inventaris</span>
-        <span class="sr-count">${state.items.length} barang</span>
+      <div class="sr-laporan-header">
+        <div class="sr-section-title">
+          <span>Inventaris</span>
+          <span class="sr-count">${state.items.length} barang</span>
+        </div>
+        <button id="btn-add-item" class="sr-fab-inline" title="Tambah barang">${icons.plus}</button>
       </div>
       <div class="sr-laporan-list">${rows}</div>
-    `;
-  };
 
-  // ─── Render: Belanja ──────────────────────────────────────────────────────
-  const renderBelanja = () => {
-    return `
-      <div class="sr-section-title">
-        <span>Belanja</span>
-      </div>
-
-      <!-- Search -->
-      <div class="sr-search-wrap">
-        <span class="sr-search-icon">${icons.search}</span>
-        <input type="text" id="belanja-search" class="sr-search-input" placeholder="Cari nama barang..." autocomplete="off">
-      </div>
-
-      <!-- Search Results / Register -->
-      <div id="belanja-result" class="sr-result-area"></div>
-
-      <!-- Register New Form (hidden by default) -->
-      <div id="belanja-register" class="sr-card" style="display:none;">
-        <h3 class="sr-card-title">${icons.plus} Daftarkan Barang Baru</h3>
+      <!-- Add New Item Form (hidden by default) -->
+      <div id="add-item-form" class="sr-card" style="display:none; margin-top:12px;">
+        <h3 class="sr-card-title">${icons.plus} Tambah Barang Baru</h3>
         <div class="sr-form-group">
           <label>Nama Barang <span class="required">*</span></label>
-          <input type="text" id="reg-nama" class="sr-input" placeholder="Contoh: Sabun Mandi">
+          <input type="text" id="new-nama" class="sr-input" placeholder="Contoh: Sabun Mandi">
         </div>
         <div class="sr-form-row">
-          <div class="sr-form-group">
+          <div class="sr-form-group flex-1">
             <label>Stok (Segel)</label>
-            <input type="number" id="reg-stok" class="sr-input" value="0" min="0">
+            <input type="number" id="new-stok" class="sr-input" value="0" min="0">
           </div>
-          <div class="sr-form-group">
+          <div class="sr-form-group flex-1">
             <label>Dibuka</label>
-            <input type="number" id="reg-dibuka" class="sr-input" value="0" min="0">
+            <input type="number" id="new-dibuka" class="sr-input" value="0" min="0">
           </div>
         </div>
-        <button id="btn-register" class="sr-btn sr-btn-primary">Daftarkan Barang</button>
+        <button id="btn-save-new-item" class="sr-btn sr-btn-primary sr-btn-full">Simpan Barang</button>
       </div>
-    `;
-  };
-
-  // ─── Render: Konsumsi ─────────────────────────────────────────────────────
-  const renderKonsumsi = () => {
-    return `
-      <div class="sr-section-title">
-        <span>Konsumsi Hari Ini</span>
-        <span class="sr-count">${todayStr()}</span>
-      </div>
-
-      <!-- Search -->
-      <div class="sr-search-wrap">
-        <span class="sr-search-icon">${icons.search}</span>
-        <input type="text" id="konsumsi-search" class="sr-search-input" placeholder="Cari nama barang..." autocomplete="off">
-      </div>
-
-      <!-- Result -->
-      <div id="konsumsi-result" class="sr-result-area"></div>
     `;
   };
 
   // ─── Attach Events ────────────────────────────────────────────────────────
   const attachEvents = () => {
     container.querySelector('#btn-back').addEventListener('click', () => navigate('dashboard'));
-
-    container.querySelectorAll('.sr-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        activeTab = btn.dataset.tab;
-        refreshContent();
-      });
-    });
-
     attachContentEvents();
+    attachModalEvents();
   };
 
   const attachContentEvents = () => {
-    // ── Laporan events ──
+    // Delete buttons
     container.querySelectorAll('.btn-delete-item').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // don't open modal
         if (confirm('Yakin ingin menghapus barang ini?')) {
           state.items = state.items.filter(it => it.id !== btn.dataset.id);
           saveState();
@@ -246,100 +210,34 @@ export function StokRumahModule(container, navigate) {
       });
     });
 
-    // ── Belanja events ──
-    const belanjaSearch = container.querySelector('#belanja-search');
-    if (belanjaSearch) {
-      belanjaSearch.addEventListener('input', handleBelanjaSearch);
-    }
-    const btnRegister = container.querySelector('#btn-register');
-    if (btnRegister) {
-      btnRegister.addEventListener('click', handleRegisterItem);
-    }
-
-    // ── Konsumsi events ──
-    const konsumsiSearch = container.querySelector('#konsumsi-search');
-    if (konsumsiSearch) {
-      konsumsiSearch.addEventListener('input', handleKonsumsiSearch);
-    }
-  };
-
-  // ─── Belanja Logic ────────────────────────────────────────────────────────
-  const handleBelanjaSearch = (e) => {
-    const query = e.target.value.trim().toLowerCase();
-    const resultEl = container.querySelector('#belanja-result');
-    const registerEl = container.querySelector('#belanja-register');
-
-    if (!query) {
-      resultEl.innerHTML = '';
-      registerEl.style.display = 'none';
-      return;
-    }
-
-    const matches = state.items.filter(it => it.nama.toLowerCase().includes(query));
-
-    if (matches.length > 0) {
-      registerEl.style.display = 'none';
-      resultEl.innerHTML = matches.map(item => `
-        <div class="sr-card sr-product-card" id="belanja-card-${item.id}">
-          <div class="sr-product-header">
-            <span class="sr-product-name">${item.nama}</span>
-            <span class="sr-product-stok">Stok: <strong>${item.stok}</strong></span>
-          </div>
-          <div class="sr-form-row">
-            <div class="sr-form-group flex-1">
-              <label>Jumlah Dibeli</label>
-              <input type="number" class="sr-input belanja-qty" data-id="${item.id}" value="1" min="1">
-            </div>
-            <div class="sr-form-group" style="align-self:flex-end;">
-              <button class="sr-btn sr-btn-primary btn-tambah-stok" data-id="${item.id}">+ Tambah Stok</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-
-      // Attach buy buttons
-      resultEl.querySelectorAll('.btn-tambah-stok').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.dataset.id;
-          const qtyInput = resultEl.querySelector(`.belanja-qty[data-id="${id}"]`);
-          const qty = parseInt(qtyInput?.value) || 1;
-          const item = findItem(id);
-          if (!item) return;
-
-          item.stok += qty;
-          item.belanjaLog.push({ date: todayStr(), qty });
-          saveState();
-
-          // Flash feedback
-          const card = resultEl.querySelector(`#belanja-card-${id}`);
-          if (card) {
-            card.classList.add('sr-flash-success');
-            setTimeout(() => card.classList.remove('sr-flash-success'), 800);
-          }
-          // Update stok display
-          const stokSpan = card?.querySelector('.sr-product-stok strong');
-          if (stokSpan) stokSpan.textContent = item.stok;
-        });
+    // Click on card → open modal
+    container.querySelectorAll('.sr-laporan-card-clickable').forEach(card => {
+      card.addEventListener('click', () => openModal(card.dataset.id));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') openModal(card.dataset.id);
       });
+    });
 
-    } else {
-      // No match: offer to register
-      resultEl.innerHTML = `
-        <div class="sr-no-result">
-          <span>Barang "<strong>${escHtml(e.target.value.trim())}</strong>" belum terdaftar.</span>
-        </div>
-      `;
-      registerEl.style.display = 'flex';
-      // Pre-fill name
-      const regNama = container.querySelector('#reg-nama');
-      if (regNama) regNama.value = e.target.value.trim();
+    // Add item toggle
+    const btnAdd = container.querySelector('#btn-add-item');
+    if (btnAdd) {
+      btnAdd.addEventListener('click', () => {
+        const form = container.querySelector('#add-item-form');
+        form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+      });
+    }
+
+    // Save new item
+    const btnSave = container.querySelector('#btn-save-new-item');
+    if (btnSave) {
+      btnSave.addEventListener('click', handleAddNewItem);
     }
   };
 
-  const handleRegisterItem = () => {
-    const nama = (container.querySelector('#reg-nama')?.value || '').trim();
-    const stok = parseInt(container.querySelector('#reg-stok')?.value) || 0;
-    const dibuka = parseInt(container.querySelector('#reg-dibuka')?.value) || 0;
+  const handleAddNewItem = () => {
+    const nama = (container.querySelector('#new-nama')?.value || '').trim();
+    const stok = parseInt(container.querySelector('#new-stok')?.value) || 0;
+    const dibuka = parseInt(container.querySelector('#new-dibuka')?.value) || 0;
 
     if (!nama) {
       showToast('Nama barang wajib diisi!', 'error');
@@ -357,100 +255,127 @@ export function StokRumahModule(container, navigate) {
     state.items.push(newItem);
     saveState();
 
-    showToast(`"${nama}" berhasil didaftarkan!`, 'success');
-    container.querySelector('#belanja-search').value = '';
-    container.querySelector('#belanja-result').innerHTML = '';
-    container.querySelector('#belanja-register').style.display = 'none';
-    container.querySelector('#reg-stok').value = '0';
-    container.querySelector('#reg-dibuka').value = '0';
+    showToast(`"${nama}" berhasil ditambahkan!`, 'success');
+    refreshContent();
   };
 
-  // ─── Konsumsi Logic ───────────────────────────────────────────────────────
-  const handleKonsumsiSearch = (e) => {
-    const query = e.target.value.trim().toLowerCase();
-    const resultEl = container.querySelector('#konsumsi-result');
+  // ─── Modal ────────────────────────────────────────────────────────────────
+  let modalMode = 'belanja'; // 'belanja' | 'konsumsi'
+  let modalItemId = null;
 
-    if (!query) {
-      resultEl.innerHTML = '';
+  const hints = {
+    belanja: 'Tambah stok berdasarkan jumlah yang dibeli.',
+    konsumsi: 'Kurangi stok berdasarkan jumlah yang dikonsumsi.',
+  };
+
+  const openModal = (itemId) => {
+    const item = findItem(itemId);
+    if (!item) return;
+
+    modalItemId = itemId;
+    modalMode = 'belanja';
+
+    const overlay = container.querySelector('#sr-modal-overlay');
+    container.querySelector('#sr-modal-item-name').textContent = item.nama;
+    container.querySelector('#modal-stok').value = '';
+    container.querySelector('#modal-dibuka').value = '';
+    container.querySelector('#sr-modal-hint').textContent = hints.belanja;
+
+    // Reset toggle
+    container.querySelector('#toggle-belanja').classList.add('active');
+    container.querySelector('#toggle-konsumsi').classList.remove('active');
+
+    // Update submit button colour
+    updateSubmitBtn();
+
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => overlay.classList.add('sr-modal-visible'));
+    container.querySelector('#modal-stok').focus();
+  };
+
+  const closeModal = () => {
+    const overlay = container.querySelector('#sr-modal-overlay');
+    overlay.classList.remove('sr-modal-visible');
+    setTimeout(() => { overlay.style.display = 'none'; }, 250);
+    modalItemId = null;
+  };
+
+  const updateSubmitBtn = () => {
+    const btn = container.querySelector('#sr-modal-submit');
+    if (!btn) return;
+    if (modalMode === 'belanja') {
+      btn.className = 'sr-btn sr-btn-primary sr-btn-full';
+      btn.textContent = 'Tambah Stok';
+    } else {
+      btn.className = 'sr-btn sr-btn-emerald sr-btn-full';
+      btn.textContent = 'Catat Konsumsi';
+    }
+  };
+
+  const attachModalEvents = () => {
+    // Close button
+    container.querySelector('#sr-modal-close').addEventListener('click', closeModal);
+
+    // Overlay backdrop click
+    container.querySelector('#sr-modal-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    // Toggle buttons
+    container.querySelectorAll('.sr-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        modalMode = btn.dataset.mode;
+        container.querySelectorAll('.sr-toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        container.querySelector('#sr-modal-hint').textContent = hints[modalMode];
+        updateSubmitBtn();
+      });
+    });
+
+    // Submit
+    container.querySelector('#sr-modal-submit').addEventListener('click', handleModalSubmit);
+
+    // ESC key
+    document.addEventListener('keydown', handleEscKey);
+  };
+
+  const handleEscKey = (e) => {
+    if (e.key === 'Escape') closeModal();
+  };
+
+  const handleModalSubmit = () => {
+    const item = findItem(modalItemId);
+    if (!item) return;
+
+    const stokVal = parseInt(container.querySelector('#modal-stok').value) || 0;
+    const dibukaVal = parseInt(container.querySelector('#modal-dibuka').value) || 0;
+
+    if (stokVal === 0 && dibukaVal === 0) {
+      showToast('Masukkan jumlah Stok atau Dibuka!', 'error');
       return;
     }
 
-    const matches = state.items.filter(it => it.nama.toLowerCase().includes(query));
-
-    if (matches.length > 0) {
-      resultEl.innerHTML = matches.map(item => {
-        const perBulan = calcPerBulan(item);
-        return `
-          <div class="sr-card sr-product-card" id="konsumsi-card-${item.id}">
-            <div class="sr-product-header">
-              <span class="sr-product-name">${item.nama}</span>
-              <span class="sr-product-stok">Dibuka: <strong>${item.dibuka}</strong></span>
-            </div>
-            <div class="sr-stat-row">
-              <div class="sr-mini-stat">
-                <span>${item.stok}</span>
-                <label>Stok Segel</label>
-              </div>
-              <div class="sr-mini-stat">
-                <span>${perBulan}</span>
-                <label>Per Bulan</label>
-              </div>
-            </div>
-            <div class="sr-form-row">
-              <div class="sr-form-group flex-1">
-                <label>Jumlah Dikonsumsi</label>
-                <input type="number" class="sr-input konsumsi-qty" data-id="${item.id}" value="1" min="1">
-              </div>
-              <div class="sr-form-group" style="align-self:flex-end;">
-                <button class="sr-btn sr-btn-emerald btn-catat-konsumsi" data-id="${item.id}">Catat</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      resultEl.querySelectorAll('.btn-catat-konsumsi').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.dataset.id;
-          const qtyInput = resultEl.querySelector(`.konsumsi-qty[data-id="${id}"]`);
-          const qty = parseInt(qtyInput?.value) || 1;
-          const item = findItem(id);
-          if (!item) return;
-
-          // Update dibuka; ensure doesn't go negative
-          item.dibuka = Math.max(0, (item.dibuka || 0) - qty);
-          // If dibuka ran to 0 and we have sealed stock, open one
-          if (item.dibuka === 0 && item.stok > 0) {
-            item.stok -= 1;
-            item.dibuka = 1;
-          }
-
-          item.konsumsiLog.push({ date: todayStr(), qty });
-          saveState();
-
-          // Refresh card stats inline
-          const card = resultEl.querySelector(`#konsumsi-card-${id}`);
-          if (card) {
-            const newPerBulan = calcPerBulan(item);
-            card.querySelector('.sr-product-stok strong').textContent = item.dibuka;
-            const miniStats = card.querySelectorAll('.sr-mini-stat span');
-            if (miniStats[0]) miniStats[0].textContent = item.stok;
-            if (miniStats[1]) miniStats[1].textContent = newPerBulan;
-            card.classList.add('sr-flash-success');
-            setTimeout(() => card.classList.remove('sr-flash-success'), 800);
-          }
-
-          showToast('Konsumsi dicatat!', 'success');
-        });
-      });
-
+    if (modalMode === 'belanja') {
+      // Add to stok & dibuka
+      item.stok += stokVal;
+      item.dibuka += dibukaVal;
+      if (stokVal > 0 || dibukaVal > 0) {
+        item.belanjaLog.push({ date: todayStr(), qty: stokVal + dibukaVal });
+      }
+      showToast(`Stok "${item.nama}" ditambahkan!`, 'success');
     } else {
-      resultEl.innerHTML = `
-        <div class="sr-no-result">
-          <span>Barang "<strong>${escHtml(e.target.value.trim())}</strong>" tidak ditemukan. Daftarkan dulu via <strong>Belanja</strong>.</span>
-        </div>
-      `;
+      // Deduct from stok & dibuka (don't go below 0)
+      item.stok = Math.max(0, item.stok - stokVal);
+      item.dibuka = Math.max(0, item.dibuka - dibukaVal);
+      if (stokVal > 0 || dibukaVal > 0) {
+        item.konsumsiLog.push({ date: todayStr(), qty: stokVal + dibukaVal });
+      }
+      showToast(`Konsumsi "${item.nama}" dicatat!`, 'success');
     }
+
+    saveState();
+    closeModal();
+    refreshContent();
   };
 
   // ─── Utilities ────────────────────────────────────────────────────────────
@@ -474,6 +399,7 @@ export function StokRumahModule(container, navigate) {
   const mount = () => render();
   const unmount = () => {
     container.innerHTML = '';
+    document.removeEventListener('keydown', handleEscKey);
     const toast = document.getElementById('sr-toast');
     if (toast) toast.remove();
   };
